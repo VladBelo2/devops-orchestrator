@@ -16,7 +16,7 @@ def generate_vagrantfile(vm_name, vm_memory, vm_cpus, ip_mode, ip_address, insta
 
     # Generate final Vagrantfile content
     return f"""Vagrant.configure("2") do |config|
-  config.vm.box = "ubuntu/bionic64"
+  config.vm.box = "ubuntu/jammy64"
   config.vm.hostname = "{vm_name}"
 
   config.vm.provider "virtualbox" do |vb|

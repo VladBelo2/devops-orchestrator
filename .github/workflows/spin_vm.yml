@@ -1,3 +1,5 @@
+name: 🚀 Spin Local VM
+
 on:
   workflow_dispatch:
     inputs:
