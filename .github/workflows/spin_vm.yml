@@ -11,12 +11,27 @@ on:
       vm_memory:
         description: "Memory (MB)"
         required: true
-        default: "2048"
+        default: "8192"
+        type: choice
+        options:
+          - "1024"
+          - "2048"
+          - "4096"
+          - "6144"
+          - "8192"
 
       vm_cpus:
         description: "Number of CPUs"
         required: true
-        default: "2"
+        default: "4"
+        type: choice
+        options:
+          - "1"
+          - "2"
+          - "3"
+          - "4"
+          - "5"
+          - "6"
 
       ip_mode:
         description: "IP Mode (dhcp or static)"
