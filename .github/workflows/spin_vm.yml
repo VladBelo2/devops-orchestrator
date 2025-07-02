@@ -22,9 +22,13 @@ on:
         description: "IP Mode (dhcp or static)"
         required: true
         default: "dhcp"
+        type: choice
+        options:
+          - dhcp
+          - static
 
       ip_address:
-        description: "Static IP (if ip_mode is static)"
+        description: "Static IP (if IP Mode is static)"
         required: false
 
       project_repo:
