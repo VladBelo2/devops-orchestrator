@@ -1,4 +1,4 @@
-name: 🚀 Spin Local VM
+name: 🚀 Provisioning VM
 
 on:
   workflow_dispatch:

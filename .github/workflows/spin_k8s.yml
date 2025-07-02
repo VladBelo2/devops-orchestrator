@@ -1,0 +1,42 @@
+name: ☸️ Provision Kubernetes (K3s)
+
+on:
+  workflow_dispatch:
+    inputs:
+      cluster_name:
+        description: "K3s Cluster Name"
+        required: true
+        default: "devops-k3s"
+
+      install_dashboard:
+        description: "Install Kubernetes Dashboard"
+        required: false
+        default: "true"
+
+      deploy_test_app:
+        description: "Deploy test pod (nginx)"
+        required: false
+        default: "true"
+
+jobs:
+  provision-k8s:
+    name: ☸️ Provision K3s Cluster
+    runs-on: [self-hosted, macos]
+    steps:
+      - name: 📂 Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: ☸️ Install K3s and Provision Cluster
+        run: |
+          bash scripts/spin_k3s_cluster.sh \
+            "${{ github.event.inputs.cluster_name }}" \
+            "${{ github.event.inputs.install_dashboard }}" \
+            "${{ github.event.inputs.deploy_test_app }}"
+
+      - name: 🔍 Show Cluster Status
+        run: |
+          export KUBECONFIG=/etc/rancher/k3s/k3s.yaml
+          echo "[INFO] 🧠 Nodes:"
+          kubectl get nodes
+          echo "[INFO] 🧱 System Pods:"
+          kubectl get pods -A
