@@ -9,9 +9,9 @@ on:
         default: "my-container"
 
       base_image:
-        description: "Base image (e.g., python:3.10)"
+        description: "Base image (e.g., python:3.10-slim)"
         required: true
-        default: "python:3.10"
+        default: "python:3.10-slim"
 
       install_python:
         description: "Install Python (base image might already have it)"

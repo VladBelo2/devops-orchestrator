@@ -3,7 +3,6 @@ import os
 import argparse
 
 TEMPLATE = """
-version: "3.9"
 services:
   {name}:
     container_name: {name}
