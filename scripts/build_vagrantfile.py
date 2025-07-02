@@ -40,8 +40,8 @@ def main():
     parser.add_argument("--vm-cpus", required=True, help="Number of virtual CPUs")
     parser.add_argument("--ip-mode", required=True, choices=["dhcp", "static"], help="IP mode")
     parser.add_argument("--ip-address", required=False, help="Static IP (required if ip-mode=static)")
-    parser.add_argument("--install-python", required=True, help="true or false")
-    parser.add_argument("--pip-packages", required=False, help="Space-separated pip packages")
+    # parser.add_argument("--install-python", required=True, help="true or false")
+    # parser.add_argument("--pip-packages", required=False, help="Space-separated pip packages")
 
     args = parser.parse_args()
 
