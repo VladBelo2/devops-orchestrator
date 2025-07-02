@@ -83,7 +83,7 @@ jobs:
       - name: 🧹 Destroy existing VM if exists
         working-directory: ./vms/${{ github.event.inputs.vm_name }}
         run: |
-            vagrant status | grep -q 'running\|saved\|poweroff' && vagrant destroy -f || echo "No VM to destroy"
+            vagrant destroy -f || echo "No VM to destroy"
 
       - name: 🧱 vagrant up
         working-directory: ./vms/${{ github.event.inputs.vm_name }}
