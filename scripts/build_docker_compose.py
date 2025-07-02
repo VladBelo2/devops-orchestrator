@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
-import os, argparse
+import os
+import argparse
 
 TEMPLATE = """
 version: "3.9"
@@ -11,11 +12,18 @@ services:
       - "{port}:80"
     command: >
       bash -c "
-      {'apt-get update && apt-get install -y python3 python3-pip &&' if install_python else ''}
-      pip install {packages} &&
+      {provision_cmd}
       tail -f /dev/null
       "
 """
+
+def build_provision_command(install_python, pip_packages):
+    commands = []
+    if install_python:
+        commands.append("apt-get update && apt-get install -y python3 python3-pip")
+    if pip_packages:
+        commands.append(f"pip install {pip_packages}")
+    return " && ".join(commands)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
@@ -29,12 +37,16 @@ if __name__ == "__main__":
     container_dir = f"containers/{args.container_name}"
     os.makedirs(container_dir, exist_ok=True)
 
+    provision_cmd = build_provision_command(
+        install_python=args.install_python.lower() == "true",
+        pip_packages=args.pip_packages or ""
+    )
+
     content = TEMPLATE.format(
         name=args.container_name,
         image=args.base_image,
         port=args.expose_port,
-        install_python=args.install_python.lower() == "true",
-        packages=args.pip_packages or ""
+        provision_cmd=provision_cmd
     )
 
     compose_path = os.path.join(container_dir, "docker-compose.yml")
