@@ -78,14 +78,14 @@ jobs:
 
       - name: 🔄 Copy Project Files Into VM Dir
         run: |
-          cp -r external/project/* vms/${{ github.event.inputs.vm_name }}/
+          rsync -a --exclude 'Vagrantfile' external/project/ vms/${{ github.event.inputs.vm_name }}/
+
+      - name: 🧹 Destroy existing VM if exists
+        working-directory: ./vms/${{ github.event.inputs.vm_name }}
+        run: |
+            vagrant status | grep -q 'running\|saved\|poweroff' && vagrant destroy -f || echo "No VM to destroy"
 
       - name: 🧱 vagrant up
         working-directory: ./vms/${{ github.event.inputs.vm_name }}
         run: |
           vagrant up
-
-      - name: ⚙️ Provision Project VM
-        working-directory: ./vms/${{ github.event.inputs.vm_name }}
-        run: |
-          vagrant ssh -c "bash /vagrant/provision.sh"
