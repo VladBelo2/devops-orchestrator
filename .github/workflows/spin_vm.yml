@@ -1,0 +1,67 @@
+on:
+  workflow_dispatch:
+    inputs:
+      vm_name:
+        description: "VM Name"
+        required: true
+        default: "devops-vm"
+
+      vm_memory:
+        description: "Memory (MB)"
+        required: true
+        default: "2048"
+
+      vm_cpus:
+        description: "Number of CPUs"
+        required: true
+        default: "2"
+
+      ip_mode:
+        description: "IP Mode (dhcp or static)"
+        required: true
+        default: "dhcp"
+
+      ip_address:
+        description: "Static IP (if ip_mode is static)"
+        required: false
+
+      install_python:
+        description: "Install Python"
+        required: false
+        default: "true"
+
+      pip_packages:
+        description: "Pip Packages (space-separated)"
+        required: false
+        default: "flask requests"
+
+jobs:
+  spin-vm:
+    name: 🧱 Create VM
+    runs-on: [self-hosted, macos]
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 🔧 Build Vagrantfile
+        run: |
+          chmod +x scripts/build_vagrantfile.py
+          python3 scripts/build_vagrantfile.py \
+            --vm-name "${{ github.event.inputs.vm_name }}" \
+            --vm-memory "${{ github.event.inputs.vm_memory }}" \
+            --vm-cpus "${{ github.event.inputs.vm_cpus }}" \
+            --ip-mode "${{ github.event.inputs.ip_mode }}" \
+            --ip-address "${{ github.event.inputs.ip_address }}" \
+            --install-python "${{ github.event.inputs.install_python }}" \
+            --pip-packages "${{ github.event.inputs.pip_packages }}"
+
+      - name: 🧱 Vagrant Up
+        working-directory: ./vms/${{ github.event.inputs.vm_name }}
+        run: |
+          vagrant up
+
+      - name: ⚙️ Provision VM
+        working-directory: ./vms/${{ github.event.inputs.vm_name }}
+        run: |
+          bash ../../scripts/provision_vm.sh \
+            "${{ github.event.inputs.install_python }}" \
+            "${{ github.event.inputs.pip_packages }}"
