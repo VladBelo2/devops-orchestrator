@@ -1,4 +1,4 @@
-name: 🚀 Provisioning VM
+name: 🚀 Provisioning VM from External Project
 
 on:
   workflow_dispatch:
@@ -27,24 +27,27 @@ on:
         description: "Static IP (if ip_mode is static)"
         required: false
 
-      install_python:
-        description: "Install Python"
-        required: false
-        default: "true"
-
-      pip_packages:
-        description: "Pip Packages (space-separated)"
-        required: false
-        default: "flask requests"
+      project_repo:
+        description: "GitHub repo to provision (e.g. vladbelo2/gameops-lab)"
+        required: true
+        default: "vladbelo2/gameops-lab"
 
 jobs:
   spin-vm:
-    name: 🧱 Create VM
-    runs-on: [self-hosted, macos]
-    steps:
-      - uses: actions/checkout@v4
+    name: 🧱 Spin VM for ${{ github.event.inputs.project_repo }}
+    runs-on: [self-hosted, macos, X64]
 
-      - name: 🔧 Build Vagrantfile
+    steps:
+      - name: 📁 Checkout Orchestrator Repo
+        uses: actions/checkout@v4
+
+      - name: 📦 Clone External Project
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.project_repo }}
+          path: external/project
+
+      - name: 🔧 Generate Vagrantfile
         run: |
           chmod +x scripts/build_vagrantfile.py
           python3 scripts/build_vagrantfile.py \
@@ -52,18 +55,18 @@ jobs:
             --vm-memory "${{ github.event.inputs.vm_memory }}" \
             --vm-cpus "${{ github.event.inputs.vm_cpus }}" \
             --ip-mode "${{ github.event.inputs.ip_mode }}" \
-            --ip-address "${{ github.event.inputs.ip_address }}" \
-            --install-python "${{ github.event.inputs.install_python }}" \
-            --pip-packages "${{ github.event.inputs.pip_packages }}"
+            --ip-address "${{ github.event.inputs.ip_address }}"
 
-      - name: 🧱 Vagrant Up
+      - name: 🔄 Copy Project Files Into VM Dir
+        run: |
+          cp -r external/project/* vms/${{ github.event.inputs.vm_name }}/
+
+      - name: 🧱 vagrant up
         working-directory: ./vms/${{ github.event.inputs.vm_name }}
         run: |
           vagrant up
 
-      - name: ⚙️ Provision VM
+      - name: ⚙️ Provision Project VM
         working-directory: ./vms/${{ github.event.inputs.vm_name }}
         run: |
-          bash ../../scripts/provision_vm.sh \
-            "${{ github.event.inputs.install_python }}" \
-            "${{ github.event.inputs.pip_packages }}"
+          vagrant ssh -c "bash /vagrant/provision.sh"
