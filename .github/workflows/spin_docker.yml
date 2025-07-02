@@ -1,0 +1,52 @@
+name: 🐳 Spin Docker Container
+
+on:
+  workflow_dispatch:
+    inputs:
+      container_name:
+        description: "Name of the container"
+        required: true
+        default: "my-container"
+
+      base_image:
+        description: "Base image (e.g., python:3.10)"
+        required: true
+        default: "python:3.10"
+
+      install_python:
+        description: "Install Python (base image might already have it)"
+        required: false
+        default: "false"
+
+      pip_packages:
+        description: "Pip packages (space-separated)"
+        required: false
+        default: "flask requests"
+
+      expose_port:
+        description: "Host port to expose"
+        required: false
+        default: "8080"
+
+jobs:
+  spin-container:
+    runs-on: [self-hosted, macos]
+    steps:
+      - name: 📂 Checkout Repo
+        uses: actions/checkout@v4
+
+      - name: 🛠️ Build Docker Compose File
+        run: |
+          python3 scripts/build_docker_compose.py \
+            --container-name "${{ github.event.inputs.container_name }}" \
+            --base-image "${{ github.event.inputs.base_image }}" \
+            --install-python "${{ github.event.inputs.install_python }}" \
+            --pip-packages "${{ github.event.inputs.pip_packages }}" \
+            --expose-port "${{ github.event.inputs.expose_port }}"
+
+      - name: 🐳 Docker Compose Up
+        working-directory: containers/${{ github.event.inputs.container_name }}
+        run: docker-compose up -d
+
+      - name: 📝 Show Logs
+        run: docker logs ${{ github.event.inputs.container_name }}
