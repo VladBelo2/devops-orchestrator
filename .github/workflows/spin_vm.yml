@@ -47,9 +47,19 @@ on:
         required: false
 
       project_repo:
-        description: "GitHub repo to provision (e.g. vladbelo2/gameops-lab)"
+        description: "GitHub repo to provision"
         required: true
         default: "vladbelo2/gameops-lab"
+        type: choice
+        options:
+          - vladbelo2/gameops-lab
+          - vladbelo2/kube-resilience-lab
+          - vladbelo2/cloud-cost-simulator
+          - custom
+          
+      custom_repo:
+        description: "Enter custom GitHub repo (only if 'custom' is selected above)"
+        required: false
 
 jobs:
   spin-vm:
@@ -60,10 +70,17 @@ jobs:
       - name: 📁 Checkout Orchestrator Repo
         uses: actions/checkout@v4
 
+      - name: 🧪 Validate Custom Repo Input
+        run: |
+          if [[ "${{ github.event.inputs.project_repo }}" == "custom" && -z "${{ github.event.inputs.custom_repo }}" ]]; then
+            echo "[ERROR] You selected 'custom' but did not provide a custom_repo."
+            exit 1
+          fi
+
       - name: 📦 Clone External Project
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.inputs.project_repo }}
+          repository: ${{ github.event.inputs.project_repo == 'custom' && github.event.inputs.custom_repo || github.event.inputs.project_repo }}
           path: external/project
 
       - name: 🔧 Generate Vagrantfile
@@ -82,21 +99,21 @@ jobs:
 
       - name: 🧹 Destroy existing VMs that match name
         run: |
-            echo "[INFO] 🔍 Checking for existing VMs matching '${{ github.event.inputs.vm_name }}'..."
-            MATCHING_VMS=$(VBoxManage list vms | grep "\"${{ github.event.inputs.vm_name }}" | cut -d '"' -f2)
+          echo "[INFO] 🔍 Checking for existing VMs matching '${{ github.event.inputs.vm_name }}'..."
+          MATCHING_VMS=$(VBoxManage list vms | grep "\"${{ github.event.inputs.vm_name }}" | cut -d '"' -f2)
 
-            if [[ -z "$MATCHING_VMS" ]]; then
+          if [[ -z "$MATCHING_VMS" ]]; then
             echo "[INFO] ✅ No matching VMs found"
-            else
+          else
             echo "[INFO] ⚠️ Found matching VMs:"
             echo "$MATCHING_VMS"
 
             echo "$MATCHING_VMS" | while read vm; do
-                echo "[INFO] 🧨 Destroying VM: $vm"
-                VBoxManage controlvm "$vm" poweroff || true
-                VBoxManage unregistervm "$vm" --delete || true
+              echo "[INFO] 🧨 Destroying VM: $vm"
+              VBoxManage controlvm "$vm" poweroff || true
+              VBoxManage unregistervm "$vm" --delete || true
             done
-            fi
+          fi
 
       - name: 🧱 vagrant up
         working-directory: ./vms/${{ github.event.inputs.vm_name }}
