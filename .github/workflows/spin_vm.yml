@@ -56,6 +56,7 @@ on:
           - vladbelo2/kube-resilience-lab
           - vladbelo2/cloud-cost-simulator
           - custom
+          - none
           
       custom_repo:
         description: "Enter custom GitHub repo (only if 'custom' is selected above)"
@@ -78,9 +79,17 @@ jobs:
           fi
 
       - name: 📦 Clone External Project
+        if: ${{ github.event.inputs.project_repo != 'none' && github.event.inputs.project_repo != 'custom' }}
         uses: actions/checkout@v4
         with:
-          repository: ${{ github.event.inputs.project_repo == 'custom' && github.event.inputs.custom_repo || github.event.inputs.project_repo }}
+          repository: ${{ github.event.inputs.project_repo }}
+          path: external/project
+
+      - name: 📦 Clone Custom Project
+        if: ${{ github.event.inputs.project_repo == 'custom' }}
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ github.event.inputs.custom_repo }}
           path: external/project
 
       - name: 🔧 Generate Vagrantfile
@@ -94,6 +103,7 @@ jobs:
             --ip-address "${{ github.event.inputs.ip_address }}"
 
       - name: 🔄 Copy Project Files Into VM Dir
+        if: ${{ github.event.inputs.project_repo != 'none' }}
         run: |
           rsync -a --exclude 'Vagrantfile' external/project/ vms/${{ github.event.inputs.vm_name }}/
 
@@ -114,6 +124,11 @@ jobs:
               VBoxManage unregistervm "$vm" --delete || true
             done
           fi
+
+      - name: 🧪 Check and Install Vagrant & VirtualBox
+        run: |
+          chmod +x scripts/check_dependencies.sh
+          ./scripts/check_dependencies.sh
 
       - name: 🧱 vagrant up
         working-directory: ./vms/${{ github.event.inputs.vm_name }}
