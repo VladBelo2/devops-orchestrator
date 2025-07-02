@@ -28,22 +28,25 @@ def validate_port(port):
         print(f"[ERROR] ❌ Invalid port: {port}. Must be between 1–65535.")
         sys.exit(1)
 
-def build_provision_command(args):
+def build_provision_command(install_python, install_nodejs, install_golang, pip_packages):
     commands = []
 
-    if args.install_python.lower() == "true":
-        commands.append("apt-get update && apt-get install -y python3 python3-pip")
+    if install_python:
+        commands.append("apt-get update && apt-get install -y python3 python3-pip || true")
 
-    if args.pip_packages:
-        commands.append(f"pip install {args.pip_packages}")
+    if pip_packages:
+        commands.append(f"pip install {pip_packages} || true")
 
-    if args.install_node.lower() == "true":
-        commands.append("curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs")
+    if install_nodejs:
+        commands.append("curl -fsSL https://deb.nodesource.com/setup_18.x | bash - && apt-get install -y nodejs || true")
 
-    if args.install_go.lower() == "true":
-        commands.append("apt-get update && apt-get install -y golang")
+    if install_golang:
+        commands.append("apt-get update && apt-get install -y golang-go || true")
 
-    return " && ".join(commands) if commands else "echo '[INFO] ✅ No extra provisioning needed'"
+    # Final keep-alive
+    commands.append("tail -f /dev/null")
+
+    return " && ".join(commands)
 
 def main():
     parser = argparse.ArgumentParser()
